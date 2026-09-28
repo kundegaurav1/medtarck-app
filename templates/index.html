@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedTrack - Connected MySQL Portal</title>
+    <style>
+        :root {
+            --dark-blue: #2F404F;
+            --teal-accent: #3884A1;
+            --light-bg: #F0F1EE;
+            --soft-mint: #C7DAD3;
+            --white: #FFFFFF;
+            --text-dark: #2F404F;
+            --text-muted: #5C7080;
+            --border-color: #D3DDD8;
+            --danger: #e11d48;
+            --warning: #f59e0b;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: system-ui, -apple-system, sans-serif; 
+        }
+
+        body { 
+            background-color: var(--light-bg); 
+            color: var(--text-dark); 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 24px 16px; 
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 580px; 
+            background: var(--white); 
+            border: 2px solid var(--border-color); 
+            border-radius: 24px; 
+            padding: 32px 28px; 
+            box-shadow: 0 12px 32px rgba(47, 64, 79, 0.08); 
+        }
+
+        .header-banner { 
+            background-color: var(--dark-blue); 
+            padding: 24px 20px; 
+            border-radius: 18px; 
+            text-align: center; 
+            color: var(--white); 
+            margin-bottom: 24px; 
+        }
+
+        .brand-logo { 
+            font-size: 28px; 
+            font-weight: 800; 
+        }
+        
+        /* Stepper Indicator */
+        .step-indicator { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 24px; 
+            position: relative; 
+        }
+
+        .step-indicator::before { 
+            content: ''; 
+            position: absolute; 
+            top: 50%; 
+            left: 0; 
+            right: 0; 
+            height: 2px; 
+            background: var(--border-color); 
+            z-index: 1; 
+            transform: translateY(-50%); 
+        }
+
+        .step-item { 
+            position: relative; 
+            z-index: 2; 
+            background: var(--white); 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            border: 2px solid var(--border-color); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 700; 
+            color: var(--text-muted); 
+        }
+
+        .step-item.active { 
+            border-color: var(--teal-accent); 
+            background: var(--teal-accent); 
+            color: var(--white); 
+        }
+
+        .step-item.completed { 
+            border-color: var(--dark-blue); 
+            background: var(--dark-blue); 
+            color: var(--white); 
+        }
+
+        .auth-toggle { 
+            display: flex; 
+            justify-content: center; 
+            gap: 16px; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid var(--border-color); 
+            padding-bottom: 12px; 
+        }
+
+        .auth-toggle-btn { 
+            background: none; 
+            border: none; 
+            font-size: 16px; 
+            font-weight: 700; 
+            color: var(--text-muted); 
+            cursor: pointer; 
+        }
+
+        .auth-toggle-btn.active { 
+            color: var(--teal-accent); 
+            border-bottom: 3px solid var(--teal-accent); 
+        }
+
+        .user-type-selector { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            background: var(--light-bg); 
+            padding: 6px; 
+            border-radius: 14px; 
+        }
+
+        .type-btn { 
+            background: transparent; 
+            border: none; 
+            padding: 10px; 
+            font-weight: 700; 
+            color: var(--text-muted); 
+            cursor: pointer; 
+            border-radius: 10px; 
+        }
+
+        .type-btn.active { 
+            background-color: var(--white); 
+            color: var(--dark-blue); 
+        }
+
+        .form-group { 
+            margin-bottom: 18px; 
+        }
+
+        label { 
+            display: block; 
+            font-size: 14px; 
+            font-weight: 700; 
+            margin-bottom: 6px; 
+        }
+
+        input, select { 
+            width: 100%; 
+            padding: 12px 14px; 
+            font-size: 15px; 
+            border: 2px solid var(--border-color); 
+            border-radius: 12px; 
+            outline: none; 
+        }
+        
+        .btn-group { 
+            display: flex; 
+            gap: 12px; 
+            margin-top: 10px; 
+        }
+
+        .submit-btn { 
+            flex: 1; 
+            background-color: var(--teal-accent); 
+            color: var(--white); 
+            font-size: 16px; 
+            font-weight: 700; 
+            padding: 14px; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+        }
+
+        .secondary-btn { 
+            background-color: var(--light-bg); 
+            color: var(--text-dark); 
+            border: 2px solid var(--border-color); 
+        }
+
+        .alarm-card { 
+            background: #fff; 
+            border: 2px dashed var(--teal-accent); 
+            padding: 16px; 
+            border-radius: 16px; 
+            margin-top: 16px; 
+            text-align: center; 
+        }
+
+        .alarm-banner { 
+            display: none; 
+            background: var(--danger); 
+            color: white; 
+            padding: 18px; 
+            border-radius: 16px; 
+            margin-bottom: 20px; 
+            text-align: center; 
+        }
+
+        .refill-banner { 
+            display: none; 
+            background: var(--warning); 
+            color: var(--dark-blue); 
+            padding: 14px; 
+            border-radius: 14px; 
+            margin-bottom: 20px; 
+            text-align: center; 
+            font-weight: 700; 
+        }
+
+        .report-list { 
+            margin-top: 16px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+
+        .report-card { 
+            background: var(--light-bg); 
+            border: 1px solid var(--border-color); 
+            padding: 12px 16px; 
+            border-radius: 12px; 
+            display: flex; 
+            justify-content: space-between; 
+        }
+
+        .hidden { 
+            display: none !important; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-banner">
+            <div class="brand-logo">MedTrack Portal</div>
+            <p>Live Connected to MySQL Database</p>
+        </div>
+
+        <!-- ALARM NOTIFICATION BANNER -->
+        <div id="alarmBanner" class="alarm-banner">
+            <h2>🔔 MEDICATION ALARM RINGING!</h2>
+            <p id="alarmMessage">Time to take your scheduled medicine!</p>
+            <button onclick="stopAlarm()" style="margin-top: 14px; padding: 10px 20px; background: white; color: var(--danger); border: none; font-weight: 800; border-radius: 8px; cursor: pointer;">STOP ALARM NOW</button>
+        </div>
+
+        <!-- REFILL WARNING BANNER -->
+        <div id="refillBanner" class="refill-banner">
+            ⚠️ REFILL NOTICE: Stock is running low! Please order/refill your medicine.
+        </div>
+
+        <!-- STEPPER INDICATOR -->
+        <div class="step-indicator">
+            <div class="step-item active" id="stepIndicator1">1</div>
+            <div class="step-item" id="stepIndicator2">2</div>
+            <div class="step-item" id="stepIndicator3">3</div>
+            <div class="step-item" id="stepIndicator4">4</div>
+        </div>
+
+        <!-- STAGE 1: ACCOUNT CREATION / SIGN IN -->
+        <div id="stage1">
+            <div class="auth-toggle">
+                <button type="button" id="toggleSignUp" class="auth-toggle-btn active" onclick="switchAuthMode('signup')">Create Account</button>
+                <button type="button" id="toggleSignIn" class="auth-toggle-btn" onclick="switchAuthMode('signin')">Sign In</button>
+            </div>
+
+            <div id="signupMode">
+                <div class="user-type-selector">
+                    <button type="button" id="patientTab" class="type-btn active" onclick="switchAccountType('patient')">Patient</button>
+                    <button type="button" id="relativeTab" class="type-btn" onclick="switchAccountType('relative')">Patient Relative</button>
+                </div>
+
+                <form id="patientSignUpForm">
+                    <div class="form-group"><label>Full Name</label><input type="text" id="regName" required></div>
+                    <div class="form-group"><label>Phone Number</label><input type="tel" id="regPhone" required></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="regPassword" required></div>
+                    <button type="button" class="submit-btn" onclick="submitRegister('patient')">Register Patient to MySQL</button>
+                </form>
+
+                <form id="relativeSignUpForm" class="hidden">
+                    <div class="form-group"><label>Full Name</label><input type="text" id="relName" required></div>
+                    <div class="form-group"><label>Connection with Patient</label>
+                        <select id="relationship">
+                            <option value="son">Son</option>
+                            <option value="daughter">Daughter</option>
+                            <option value="father">Father</option>
+                            <option value="mother">Mother</option>
+                            <option value="caregiver">Caregiver</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Patient's Mobile Number</label><input type="tel" id="linkedPhone" required></div>
+                    <button type="button" class="submit-btn" onclick="submitRegister('relative')">Register Relative to MySQL</button>
+                </form>
+            </div>
+
+            <div id="signinMode" class="hidden">
+                <form id="signInForm">
+                    <div class="form-group"><label>Phone Number</label><input type="tel" id="loginPhone" required></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required></div>
+                    <button type="button" class="submit-btn" onclick="goToStage(2)">Sign In</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- STAGE 2: PATIENT HEALTH PROFILE -->
+        <div id="stage2" class="hidden">
+            <h3>Stage 2: Health Profile</h3>
+            <form id="healthDetailsForm">
+                <div class="form-group"><label>Patient Age</label><input type="number" id="patientAge" required></div>
+                <div class="form-group"><label>Disease / Medical Condition</label><input type="text" id="diseaseType" required></div>
+                <div class="form-group"><label>Type of Medicine</label>
+                    <select id="medicineType">
+                        <option value="tablet">Tablet / Capsule</option>
+                        <option value="syrup">Syrup / Liquid</option>
+                        <option value="injection">Injection / Insulin</option>
+                        <option value="drops">Drops</option>
+                        <option value="inhaler">Inhaler</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Medicine Name & Dosage</label><input type="text" id="medicineName" required></div>
+                <div class="btn-group">
+                    <button type="button" class="submit-btn secondary-btn" onclick="goToStage(1)">Back</button>
+                    <button type="button" class="submit-btn" onclick="submitHealthProfile()">Save Profile to MySQL</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- STAGE 3: ALARM & REFILL SCHEDULE -->
+        <div id="stage3" class="hidden">
+            <h3>Stage 3: Alarm & Refill Schedule</h3>
+            <form id="reminderForm">
+                <div class="form-group"><label>Meal Timing Schedule</label>
+                    <select id="mealRoutine">
+                        <option value="before_breakfast">Before Breakfast</option>
+                        <option value="after_breakfast">After Breakfast</option>
+                        <option value="before_lunch">Before Lunch</option>
+                        <option value="after_lunch">After Lunch</option>
+                        <option value="before_dinner">Before Dinner</option>
+                        <option value="after_dinner">After Dinner</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Exact Daily Alarm Time</label><input type="time" id="alarmTime" required></div>
+                <div class="form-group"><label>Course Duration</label>
+                    <select id="courseDuration">
+                        <option value="7">1 Week (7 Days)</option>
+                        <option value="15">15 Days</option>
+                        <option value="30">1 Month (30 Days)</option>
+                        <option value="90">3 Months (90 Days)</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Stock Pills/Doses Bought</label><input type="number" id="stockCount" required></div>
+
+                <div class="alarm-card">
+                    <div id="alarmStatus" style="font-weight: bold; color: var(--teal-accent);">No active alarm</div>
+                    <div id="refillStatus" style="color: var(--warning); font-weight: bold; margin-top: 4px;"></div>
+                </div>
+
+                <div class="btn-group" style="margin-top: 15px;">
+                    <button type="button" class="submit-btn secondary-btn" onclick="goToStage(2)">Back</button>
+                    <button type="button" class="submit-btn" onclick="submitReminder()">Activate Alarm & Save Schedule</button>
+                </div>
+                <button type="button" class="submit-btn secondary-btn" onclick="goToStage(4)" style="width: 100%; margin-top: 10px;">Next: Medical Reports Vault →</button>
+            </form>
+        </div>
+
+        <!-- STAGE 4: MEDICAL REPORTS VAULT -->
+        <div id="stage4" class="hidden">
+            <h3>Stage 4: Medical Reports Vault</h3>
+            <form id="reportForm">
+                <div class="form-group"><label>Report Title</label><input type="text" id="reportTitle" required></div>
+                <div class="form-group"><label>Report Date</label><input type="date" id="reportDate" required></div>
+                <div class="form-group"><label>Upload Report (PDF/Image)</label><input type="file" id="reportFile" required></div>
+                <button type="button" class="submit-btn" onclick="submitReport()">Upload Report to Server & MySQL</button>
+            </form>
+            <div id="reportList" class="report-list"></div>
+            <button type="button" class="submit-btn secondary-btn" onclick="goToStage(3)" style="margin-top: 15px;">Back to Stage 3</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api";
+        let activePhone = "";
+        let alarmInterval = null;
+        let audioCtx = null;
+        let beepInterval = null;
+        let alarmTriggeredToday = false; // Flag to prevent repeating alarm in the same minute
+
+        function switchAuthMode(mode) {
+            document.getElementById('signupMode').classList.toggle('hidden', mode !== 'signup');
+            document.getElementById('signinMode').classList.toggle('hidden', mode !== 'signin');
+            document.getElementById('toggleSignUp').classList.toggle('active', mode === 'signup');
+            document.getElementById('toggleSignIn').classList.toggle('active', mode === 'signin');
+        }
+
+        function switchAccountType(type) {
+            document.getElementById('patientSignUpForm').classList.toggle('hidden', type !== 'patient');
+            document.getElementById('relativeSignUpForm').classList.toggle('hidden', type !== 'relative');
+            document.getElementById('patientTab').classList.toggle('active', type === 'patient');
+            document.getElementById('relativeTab').classList.toggle('active', type === 'relative');
+        }
+
+        function goToStage(num) {
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`stage${i}`).classList.toggle('hidden', i !== num);
+                document.getElementById(`stepIndicator${i}`).className = i <= num ? (i === num ? 'step-item active' : 'step-item completed') : 'step-item';
+            }
+        }
+
+        async function submitRegister(userType) {
+            const data = userType === 'patient' ? {
+                phone: document.getElementById('regPhone').value,
+                name: document.getElementById('regName').value,
+                password: document.getElementById('regPassword').value,
+                user_type: 'patient'
+            } : {
+                phone: document.getElementById('linkedPhone').value,
+                name: document.getElementById('relName').value,
+                password: 'defaultPassword',
+                user_type: 'relative',
+                relationship: document.getElementById('relationship').value,
+                linked_phone: document.getElementById('linkedPhone').value
+            };
+
+            if (!data.phone || !data.name) { 
+                alert("Please complete required fields."); 
+                return; 
+            }
+
+            activePhone = data.phone;
+            try {
+                const res = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    alert(result.message);
+                    goToStage(2);
+                } else {
+                    alert("Error: " + result.detail);
+                }
+            } catch (err) {
+                alert("Cannot connect to backend server. Ensure main.py is running.");
+            }
+        }
+
+        async function submitHealthProfile() {
+            const data = {
+                patient_phone: activePhone || document.getElementById('regPhone').value || document.getElementById('loginPhone').value,
+                age: parseInt(document.getElementById('patientAge').value),
+                disease_type: document.getElementById('diseaseType').value,
+                medicine_type: document.getElementById('medicineType').value,
+                medicine_name: document.getElementById('medicineName').value
+            };
+
+            if (!data.patient_phone) { 
+                alert("Phone number missing. Please sign in or register first."); 
+                return; 
+            }
+
+            const res = await fetch(`${API_BASE}/health-profile`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (res.ok) {
+                alert(result.message);
+                goToStage(3);
+            }
+        }
+
+        async function submitReminder() {
+            const timeVal = document.getElementById('alarmTime').value;
+            const stock = parseInt(document.getElementById('stockCount').value) || 0;
+            const data = {
+                patient_phone: activePhone || document.getElementById('regPhone').value || document.getElementById('loginPhone').value,
+                meal_routine: document.getElementById('mealRoutine').value,
+                alarm_time: timeVal,
+                course_duration_days: parseInt(document.getElementById('courseDuration').value),
+                stock_count: stock
+            };
+
+            const res = await fetch(`${API_BASE}/schedule-reminder`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+
+            if (res.ok) {
+                alert(result.message);
+                document.getElementById('alarmStatus').innerText = `⏰ Alarm set for ${timeVal}`;
+                if (stock <= 3) {
+                    document.getElementById('refillBanner').style.display = 'block';
+                    document.getElementById('refillStatus').innerText = `⚠️ Low Stock: ${stock} doses remaining! Refill soon.`;
+                } else {
+                    document.getElementById('refillBanner').style.display = 'none';
+                    document.getElementById('refillStatus').innerText = `Stock: ${stock} Doses remaining`;
+                }
+
+                // Reset alarm flags
+                alarmTriggeredToday = false;
+                if (alarmInterval) clearInterval(alarmInterval);
+
+                // Continuously monitor current time every 1 second
+                alarmInterval = setInterval(() => {
+                    const now = new Date().toTimeString().substring(0, 5); // Returns HH:MM format
+                    
+                    if (now === timeVal) {
+                        if (!alarmTriggeredToday) {
+                            triggerAlarm();
+                        }
+                    } else {
+                        // Reset flag once the minute moves past
+                        alarmTriggeredToday = false;
+                    }
+                }, 1000);
+            }
+        }
+
+        function triggerAlarm() {
+            alarmTriggeredToday = true; // Lock trigger for this minute
+            document.getElementById('alarmBanner').style.display = 'block';
+            
+            if (!beepInterval) {
+                beepInterval = setInterval(playBeep, 500);
+            }
+        }
+
+        function stopAlarm() {
+            // Hide Banner
+            document.getElementById('alarmBanner').style.display = 'none';
+            
+            // Clear Audio Beep Loop
+            if (beepInterval) {
+                clearInterval(beepInterval);
+                beepInterval = null;
+            }
+        }
+
+        function playBeep() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // High pitch alarm tone
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } catch (e) {
+                console.error("Audio play blocked by browser policy:", e);
+            }
+        }
+
+        async function submitReport() {
+            const fileInput = document.getElementById('reportFile');
+            const formData = new FormData();
+            formData.append("patient_phone", activePhone || document.getElementById('regPhone').value || document.getElementById('loginPhone').value);
+            formData.append("title", document.getElementById('reportTitle').value);
+            formData.append("report_date", document.getElementById('reportDate').value);
+            formData.append("file", fileInput.files[0]);
+
+            const res = await fetch(`${API_BASE}/upload-report`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await res.json();
+            if (res.ok) {
+                alert(result.message);
+                const card = document.createElement('div');
+                card.className = 'report-card';
+                card.innerHTML = `<div><b>${result.report.title}</b><p>${result.report.date}</p></div><span>${result.report.file_name}</span>`;
+                document.getElementById('reportList').prepend(card);
+            }
+        }
+    </script>
+</body>
+</html>
